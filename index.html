@@ -233,7 +233,12 @@
 </head>
 <body>
     <!-- 音频元素 -->
-    <audio id="bgm" src="配音.mp3" preload="auto"></audio>
+    <audio id="bgm" preload="auto">
+        <source src="voice.MP3" type="audio/mpeg">
+        <source src="voice.MP3" type="audio/mp3">
+        <!-- 如果浏览器不支持音频，显示提示 -->
+        您的浏览器不支持音频播放
+    </audio>
 
     <!-- 字幕容器 -->
     <div id="subtitle-container">
@@ -318,20 +323,62 @@
         // 当前字幕索引
         let currentSubtitleIndex = 0;
 
+        // 音频加载检查
+        function checkAudioAvailability() {
+            return new Promise((resolve, reject) => {
+                // 检查音频是否已加载
+                if (bgm.readyState >= 2) {
+                    resolve();
+                    return;
+                }
+
+                // 监听音频加载完成
+                bgm.addEventListener('canplaythrough', () => {
+                    resolve();
+                }, { once: true });
+
+                // 监听加载错误
+                bgm.addEventListener('error', (e) => {
+                    reject(new Error('音频文件加载失败，请检查文件是否存在且可访问'));
+                }, { once: true });
+
+                // 尝试加载音频
+                bgm.load();
+
+                // 设置超时检查
+                setTimeout(() => {
+                    if (bgm.readyState === 0) {
+                        reject(new Error('音频文件加载超时，请检查网络连接或文件路径'));
+                    } else {
+                        resolve();
+                    }
+                }, 5000);
+            });
+        }
+
         // 初始化 - 在用户点击开始按钮后执行
-        function start() {
+        async function start() {
             // 隐藏开始按钮
             startBtn.classList.add('hidden');
 
-            // 开始播放音频（在用户交互后，浏览器允许播放）
-            bgm.play().then(() => {
+            try {
+                // 先检查音频是否可用
+                await checkAudioAvailability();
+                
+                // 开始播放音频（在用户交互后，浏览器允许播放）
+                await bgm.play();
                 console.log('音频开始播放');
-            }).catch(err => {
+            } catch (err) {
                 console.error('音频播放失败:', err);
-                alert('音频播放失败，请检查音频文件是否存在');
-            });
+                // 显示友好的错误提示
+                const errorMsg = err.message || '音频播放失败';
+                alert(`音频播放失败：${errorMsg}\n\n请确保：\n1. 音频文件"voice.MP3"已上传到GitHub仓库\n2. 文件路径正确\n3. 文件格式为MP3`);
+                
+                // 即使音频失败，也继续播放字幕
+                console.log('音频播放失败，但将继续显示字幕');
+            }
 
-            // 开始字幕轮播
+            // 开始字幕轮播（无论音频是否成功）
             startSubtitleSequence();
         }
 
