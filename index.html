@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生日快乐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* 字幕容器 */
+        #subtitle-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+        }
+
+        #subtitle {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        #subtitle.show {
+            opacity: 1;
+        }
+
+        /* 延迟礼物文字 */
+        #delayed-gift {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 2px 2px 8px rgba(255, 215, 0, 0.6);
+            opacity: 0;
+            z-index: 15;
+        }
+
+        #delayed-gift.fade-in {
+            animation: fadeIn 1.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) translateY(0);
+            }
+        }
+
+        /* 图片容器 */
+        #image-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+        }
+
+        #cake-image {
+            max-width: 80vw;
+            max-height: 80vh;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        #cake-image.show {
+            opacity: 1;
+        }
+
+        #cake-image.hide {
+            opacity: 0;
+        }
+
+        /* 烟雾效果容器 */
+        #smoke-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 8;
+            opacity: 0;
+        }
+
+        #smoke-container.active {
+            opacity: 1;
+        }
+
+        .smoke {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(200, 200, 200, 0.5) 50%, transparent 100%);
+            animation: smokeRise 2s ease-out forwards;
+        }
+
+        @keyframes smokeRise {
+            0% {
+                opacity: 0.8;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-200px) scale(3);
+            }
+        }
+
+        /* 按钮样式 */
+        .button {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 40px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .button.show {
+            opacity: 1;
+        }
+
+        .button:hover {
+            transform: translateX(-50%) translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .button:active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 视频容器 */
+        #video-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90vw;
+            max-width: 1200px;
+            height: 67.5vw;
+            max-height: 675px;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        #video-container.show {
+            opacity: 1;
+        }
+
+        #video-container iframe {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        /* 隐藏元素 */
+        .hidden {
+            display: none;
+        }
+
+        /* 开始按钮样式 */
+        #start-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 60px;
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #start-btn:hover {
+            transform: translate(-50%, -50%) translateY(-5px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.7);
+        }
+
+        #start-btn:active {
+            transform: translate(-50%, -50%) translateY(0);
+        }
+
+        #start-btn.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 音频元素 -->
+    <audio id="bgm" src="配音.mp3" preload="auto"></audio>
+
+    <!-- 字幕容器 -->
+    <div id="subtitle-container">
+        <div id="subtitle"></div>
+    </div>
+
+    <!-- 延迟礼物文字 -->
+    <div id="delayed-gift"></div>
+
+    <!-- 图片容器 -->
+    <div id="image-container">
+        <img id="cake-image" src="1.png" alt="生日蛋糕">
+    </div>
+
+    <!-- 烟雾效果容器 -->
+    <div id="smoke-container"></div>
+
+    <!-- 开始按钮 -->
+    <button id="start-btn">开始</button>
+
+    <!-- 按钮 -->
+    <button id="receive-btn" class="button hidden">点击接收生日蛋糕</button>
+    <button id="view-gift-btn" class="button hidden">许愿结束，康康生日礼物吧</button>
+
+    <!-- 视频容器 -->
+    <div id="video-container">
+        <iframe src="https://player.bilibili.com/player.html?bvid=BV1E7smzCEJu&page=1&high_quality=1&danmaku=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>
+    </div>
+
+    <script>
+        // ========== 配置区域 - 可以方便地修改时间 ==========
+        const CONFIG = {
+            // 每句话的显示时间（毫秒），顺序对应 word.txt 中的每一句
+            // 可以根据需要单独调整每一句的时间
+            sentenceDurations: [3000, 1600, 1400, 400, 1400, 1300, 1200, 1400],
+            
+            // 全局播放速度倍数（用于整体加速/减速）
+            // 例如：1.0 = 正常速度，0.5 = 2倍速（更快），2.0 = 0.5倍速（更慢）
+            // 这个倍数会应用到所有字幕时间
+            speedMultiplier: 1.0,
+            
+            // 轮播结束后的停顿时间（毫秒）
+            pauseAfterSubtitles: 2000,
+            
+            // 延迟年数（用于显示"一份迟到n年的生日礼物"）
+            delayedYears: 1,
+            
+            // 字幕淡入淡出时间（毫秒）
+            fadeDuration: 800
+        };
+        
+        // 计算实际播放时间（应用速度倍数）
+        function getActualDuration(originalDuration) {
+            return originalDuration / CONFIG.speedMultiplier;
+        }
+
+        // 字幕文本（从 word.txt 中读取）
+        const subtitles = [
+            '公元2110年1月1日',
+            '距离地球能源完全枯竭',
+            '还有三千六百五十天',
+            '为了解决能源危机',
+            '人类制造了赛尔机器人',
+            '和宇宙能源探索飞船赛尔号',
+            '去寻找传说中',
+            '神秘精灵看守的生日礼物'
+        ];
+
+        // DOM 元素
+        const bgm = document.getElementById('bgm');
+        const subtitle = document.getElementById('subtitle');
+        const subtitleContainer = document.getElementById('subtitle-container');
+        const delayedGift = document.getElementById('delayed-gift');
+        const cakeImage = document.getElementById('cake-image');
+        const imageContainer = document.getElementById('image-container');
+        const smokeContainer = document.getElementById('smoke-container');
+        const startBtn = document.getElementById('start-btn');
+        const receiveBtn = document.getElementById('receive-btn');
+        const viewGiftBtn = document.getElementById('view-gift-btn');
+        const videoContainer = document.getElementById('video-container');
+
+        // 当前字幕索引
+        let currentSubtitleIndex = 0;
+
+        // 初始化 - 在用户点击开始按钮后执行
+        function start() {
+            // 隐藏开始按钮
+            startBtn.classList.add('hidden');
+
+            // 开始播放音频（在用户交互后，浏览器允许播放）
+            bgm.play().then(() => {
+                console.log('音频开始播放');
+            }).catch(err => {
+                console.error('音频播放失败:', err);
+                alert('音频播放失败，请检查音频文件是否存在');
+            });
+
+            // 开始字幕轮播
+            startSubtitleSequence();
+        }
+
+        // 页面加载完成后的初始化
+        function init() {
+            // 不自动开始，等待用户点击开始按钮
+        }
+
+        // 字幕轮播序列
+        async function startSubtitleSequence() {
+            for (let i = 0; i < subtitles.length; i++) {
+                currentSubtitleIndex = i;
+                
+                // 显示当前字幕
+                subtitle.textContent = subtitles[i];
+                subtitle.classList.add('show');
+                
+                // 等待指定时间（应用速度倍数）
+                await sleep(getActualDuration(CONFIG.sentenceDurations[i]));
+                
+                // 隐藏字幕
+                subtitle.classList.remove('show');
+                
+                // 等待淡出完成（应用速度倍数）
+                await sleep(getActualDuration(CONFIG.fadeDuration));
+            }
+
+            // 所有字幕播放完毕，停顿指定时间（应用速度倍数）
+            await sleep(getActualDuration(CONFIG.pauseAfterSubtitles));
+
+            // 字幕消失后，显示延迟礼物文字
+            showDelayedGiftMessage();
+        }
+
+        // 显示延迟礼物消息
+        function showDelayedGiftMessage() {
+            delayedGift.textContent = `一份迟到n年的生日礼物`;
+            delayedGift.classList.add('fade-in');
+            
+            setTimeout(() => {
+                // 3秒后消失
+                delayedGift.style.opacity = '0';
+                delayedGift.style.transition = 'opacity 1s ease-in-out';
+                
+                setTimeout(() => {
+                    delayedGift.classList.remove('fade-in');
+                    delayedGift.style.opacity = '';
+                    delayedGift.style.transition = '';
+                    
+                    // 显示第一张图片
+                    showFirstImage();
+                }, 1000);
+            }, 3000);
+        }
+
+        // 显示第一张图片
+        function showFirstImage() {
+            cakeImage.src = '1.png';
+            cakeImage.classList.add('show');
+            
+            // 显示接收按钮
+            receiveBtn.classList.remove('hidden');
+            receiveBtn.classList.add('show');
+        }
+
+        // 创建烟雾效果
+        function createSmokeEffect() {
+            smokeContainer.classList.add('active');
+            
+            const particleCount = 50;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            for (let i = 0; i < particleCount; i++) {
+                setTimeout(() => {
+                    const smoke = document.createElement('div');
+                    smoke.className = 'smoke';
+                    
+                    // 随机位置（围绕中心点）
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * 100;
+                    const x = centerX + Math.cos(angle) * radius;
+                    const y = centerY + Math.sin(angle) * radius;
+                    
+                    smoke.style.left = x + 'px';
+                    smoke.style.top = y + 'px';
+                    
+                    // 随机延迟和持续时间
+                    smoke.style.animationDelay = Math.random() * 0.5 + 's';
+                    smoke.style.animationDuration = (1.5 + Math.random()) + 's';
+                    
+                    smokeContainer.appendChild(smoke);
+                    
+                    // 动画结束后移除
+                    setTimeout(() => {
+                        smoke.remove();
+                    }, 3000);
+                }, i * 30);
+            }
+            
+            // 2秒后移除烟雾容器
+            setTimeout(() => {
+                smokeContainer.classList.remove('active');
+            }, 2000);
+        }
+
+        // 接收按钮点击事件
+        receiveBtn.addEventListener('click', () => {
+            // 隐藏按钮
+            receiveBtn.classList.remove('show');
+            
+            // 创建烟雾效果
+            createSmokeEffect();
+            
+            // 图片淡出
+            cakeImage.classList.remove('show');
+            cakeImage.classList.add('hide');
+            
+            setTimeout(() => {
+                // 切换为第二张图片
+                cakeImage.src = '2.png';
+                cakeImage.classList.remove('hide');
+                cakeImage.classList.add('show');
+                
+                // 显示查看礼物按钮
+                setTimeout(() => {
+                    viewGiftBtn.classList.remove('hidden');
+                    viewGiftBtn.classList.add('show');
+                }, 1000);
+            }, 1000);
+        });
+
+        // 查看礼物按钮点击事件
+        viewGiftBtn.addEventListener('click', () => {
+            // 隐藏按钮和图片
+            viewGiftBtn.classList.remove('show');
+            cakeImage.classList.remove('show');
+            
+            setTimeout(() => {
+                // 显示视频
+                videoContainer.classList.add('show');
+            }, 500);
+        });
+
+        // 工具函数：睡眠
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // 开始按钮点击事件
+        startBtn.addEventListener('click', start);
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
